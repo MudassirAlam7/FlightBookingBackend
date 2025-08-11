@@ -44,8 +44,8 @@ const register = async (req, res)=>{
 
 const login = async (req, res)=>{
     try{
-        const {email, password} = req.body
-        if(!email.trim() || !password.trim()){
+        const {email, password, role} = req.body
+        if(!email.trim() || !password.trim() || !role.trim()){
             return customResponse(res, 400, "All field is required", "missing input", false, null)
         }
         const user = await User.findOne({email})

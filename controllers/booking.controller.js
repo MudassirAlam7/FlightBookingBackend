@@ -1,6 +1,25 @@
 import Flight from "../models/flight.model.js";
 import Booking from "../models/booking.model.js";
 import { customResponse } from "../utils/customResponse.js";
+const search = async (req, res)=>{
+  try{
+    const {from, to, date, passenger}= req.body
+    if(!from || !to  || !passenger){
+      return customResponse(res, 400, "All fields are required", "Missing fields", false, null);
+    }
+    const flights = await Flight.find({
+      departure: from,
+      destination: to,
+      seatsAvailable: { $gte: passenger }
+    });
+    if(flights.length === 0){
+      return customResponse(res, 404, "No flights found", "No matching flights", false, null);
+    } 
+    return customResponse(res, 200, "Flights found", null, true, flights);
+  }catch(error){
+    return customResponse(res, 500, "Something went wrong", error.message, false, null);
+  }
+}
 
 const bookFlight = async (req, res) => {
   try {
@@ -92,4 +111,4 @@ const cancelBooking = async (req, res) => {
     return customResponse(res, 500, "Server error", error.message, false, null);
   }
 };
-export {cancelBooking, bookFlight}
+export { search, cancelBooking, bookFlight}

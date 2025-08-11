@@ -5,9 +5,11 @@ import connectDB from "./config/db.js";
 import userRouter from "./routes/user.routes.js";
 import bookingRouter from "./routes/booking.routes.js";
 import flightRouter from "./routes/flight.routes.js";
+import cors from "cors";
+
 dotenv.config();
 const app = express();
-
+app.use(cors());
 // Middleware to parse JSON bodies
 app.use(express.json());
 

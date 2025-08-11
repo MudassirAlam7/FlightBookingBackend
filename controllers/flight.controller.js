@@ -7,6 +7,20 @@ const createFlight = async(req, res)=>{
         if (!airline || !flightNumber || !departure || !destination || !departureTime || !arrivalTime || !seatsAvailable || !price) {
               return customResponse(res, 400, "All fields are required", "Missing fields", false, null);
         }
+         if (
+      typeof seatsAvailable.economy !== "number" ||
+      typeof seatsAvailable.business !== "number" ||
+      typeof seatsAvailable.first !== "number"
+    ) {
+      return customResponse(res, 400, "Seats for all classes must be numbers", "Invalid seatsAvailable", false, null);
+    }
+     if (
+      typeof price.economy !== "number" ||
+      typeof price.business !== "number" ||
+      typeof price.first !== "number"
+    ) {
+      return customResponse(res, 400, "Prices for all classes must be numbers", "Invalid price", false, null);
+    }
       const flight = await Flight.create({
       airline,
       flightNumber,
@@ -26,7 +40,7 @@ const createFlight = async(req, res)=>{
 }
 const getAllFlight = async (req, res)=>{
     try{
-        const flights = await Flight.find();
+        const flights = await Flight.find().select("-__v");
         return customResponse(res, 200, "flight fetched successfully", null, true, flights)
     }
     catch(error){
