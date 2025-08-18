@@ -26,6 +26,8 @@ const search = async (req, res) => {
 
     const formattedFlights = flights.map(flight => ({
       flightName: flight.airline,
+      flightNumber: flight.flightNumber,
+      price: flight.price[seatClass],
       seatsAvailable: flight.seatsAvailable[seatClass],
       departure: flight.departure,
       destination: flight.destination
