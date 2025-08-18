@@ -73,4 +73,12 @@ const login = async (req, res)=>{
 
     }
 }
-export {register, login}
+const logout = async(req, res)=>{
+    try{
+        return customResponse(res, 200, "User logout successfully", null, true, null)
+    }
+    catch(error){
+        return customResponse(res, 500, "server error", `error : ${error}`, false, null)
+    }
+}
+export {register, login, logout}
