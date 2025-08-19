@@ -1,5 +1,7 @@
 import Flight from "../models/flight.model.js";
 import Booking from "../models/booking.model.js";
+import nodemailer from "nodemailer";
+import User from "../models/user.model.js";
 import { customResponse } from "../utils/customResponse.js";
 const search = async (req, res) => {
   try {
@@ -72,20 +74,53 @@ const bookFlight = async (req, res) => {
       seatCount,
     });
     flight.seatsAvailable -= seatCount;
+
+
     await flight.save();
-    return customResponse(res, 201, "Booking successfull", null, true, booking);
+
+
+  const user = await User.findById(userId);
+
+    // setup transporter
+    const transporter = nodemailer.createTransport({
+      service: "gmail", // can also use SMTP config
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+    });
+
+    // email template
+    const mailOptions = {
+      from: `"Flight Booking" <${process.env.EMAIL_USER}>`,
+      to: user.email,
+      subject: "Your Flight Ticket Confirmation ✈️",
+      html: `
+        <div style="font-family: Arial, sans-serif; padding: 20px; border: 1px solid #ddd; border-radius: 10px;">
+          <h2 style="color:#2563eb;">Flight Ticket Confirmation</h2>
+          <p>Hi <b>${user.username}</b>,</p>
+          <p>Your booking has been confirmed. Here are your ticket details:</p>
+          <hr/>
+          <p><b>Flight:</b> ${flight.flightName} (${flight.flightNumber})</p>
+          <p><b>From:</b> ${flight.departure} → <b>To:</b> ${flight.destination}</p>
+          <p><b>Seats Booked:</b> ${seatCount}</p>
+          <p><b>Total Price:</b> ₹${flight.price * seatCount}</p>
+          <p><b>Date:</b> ${new Date().toLocaleDateString()}</p>
+          <hr/>
+          <p style="color: green;"><b>Thank you for booking with us!</b></p>
+        </div>
+      `,
+    };
+
+    // send email
+    await transporter.sendMail(mailOptions);
+
+    return customResponse(res, 201, "Booking successful", null, true, booking);
+
   } catch (error) {
-    return customResponse(
-      res,
-      500,
-      "something went wrong",
-      error.message,
-      false,
-      null
-    );
+    return customResponse(res, 500, "Something went wrong", error.message, false, null);
   }
 };
-
 const cancelBooking = async (req, res) => {
   try {
     const bookingId = req.params;
