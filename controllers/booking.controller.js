@@ -45,7 +45,7 @@ const search = async (req, res) => {
 
 const bookFlight = async (req, res) => {
   try {
-    const { flightId, seatCount } = req.body;
+    const { flightId, seatCount, seatClass } = req.body;
     const userId = req.user.userId;
     const flight = await Flight.findById(flightId);
     if (!flight) {
@@ -58,7 +58,7 @@ const bookFlight = async (req, res) => {
         null
       );
     }
-    if (seatCount > flight.seatsAvailable) {
+    if (seatCount > flight.seatsAvailable[seatClass]) {
       return customResponse(
         res,
         400,
@@ -72,8 +72,9 @@ const bookFlight = async (req, res) => {
       user: userId,
       flight: flightId,
       seatCount,
+      seatClass,
     });
-    flight.seatsAvailable -= seatCount;
+    flight.seatsAvailable[seatClass] -= seatCount;
 
 
     await flight.save();
@@ -90,6 +91,8 @@ const bookFlight = async (req, res) => {
       },
     });
 
+     const totalPrice = flight.price[seatClass] * seatCount;
+
     // email template
     const mailOptions = {
       from: `"Flight Booking" <${process.env.EMAIL_USER}>`,
@@ -101,10 +104,10 @@ const bookFlight = async (req, res) => {
           <p>Hi <b>${user.username}</b>,</p>
           <p>Your booking has been confirmed. Here are your ticket details:</p>
           <hr/>
-          <p><b>Flight:</b> ${flight.flightName} (${flight.flightNumber})</p>
+          <p><b>Flight:</b> ${flight.airline} (${flight.flightNumber})</p>
           <p><b>From:</b> ${flight.departure} → <b>To:</b> ${flight.destination}</p>
           <p><b>Seats Booked:</b> ${seatCount}</p>
-          <p><b>Total Price:</b> ₹${flight.price * seatCount}</p>
+          <p><b>Total Price:</b> ₹${totalPrice}</p>
           <p><b>Date:</b> ${new Date().toLocaleDateString()}</p>
           <hr/>
           <p style="color: green;"><b>Thank you for booking with us!</b></p>
